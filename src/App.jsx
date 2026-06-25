@@ -9,6 +9,7 @@ import UprsPerawatan from './views/UprsPerawatan';
 import PenghuniRusun from './views/PenghuniRusun';
 import PimpinanDinas from './views/PimpinanDinas';
 import ProfilePage from './views/ProfilePage';
+import GeminiChatWidget from './components/GeminiChatWidget';
 import logoApp from '../logo/logo-app.png';
 
 function MainApp() {
@@ -223,6 +224,8 @@ function MainApp() {
           </div>
         </main>
       </div>
+
+      <GeminiChatWidget />
     </div>
   );
 }

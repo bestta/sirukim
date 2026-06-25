@@ -1,0 +1,6 @@
+{
+  "name": "Gemini Chat",
+  "description": "A fully-featured conversational AI application powered by Gemini 3.5 Flash, complete with chat history, formatting, and markdown support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

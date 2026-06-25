@@ -473,9 +473,17 @@ export const DbProvider = ({ children }) => {
 
       if (payload.user) {
         setCurrentUser(payload.user);
+<<<<<<< HEAD
       }
 
       return { ok: true, user: payload.user };
+=======
+        return { ok: true, user: payload.user };
+      }
+
+      // API responded but returned no user — fall through to local auth
+      throw new Error('API tidak mengembalikan data user.');
+>>>>>>> 561a6b9 (Initial commit SIRUKIM project)
     } catch (error) {
       const matched = users.find((user) => (
         normalizeIdentity(user.username) === normalizedIdentifier ||
