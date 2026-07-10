@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 10 Jul 2026 pada 03.20
+-- Waktu pembuatan: 25 Jun 2026 pada 10.48
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -42,8 +42,7 @@ CREATE TABLE `anggota_keluarga` (
 
 INSERT INTO `anggota_keluarga` (`id`, `user_id`, `nik`, `nama_lengkap`, `tanggal_lahir`, `jenis_kelamin`) VALUES
 ('kel-1782276252971', 'usr-1782272122169', '9798465451321', 'Momo', '1987-01-01', 'Laki-laki'),
-('kel-1782283320710', 'usr-004', '215468746513215', 'Elsa Santoso', '1990-01-01', 'Perempuan'),
-('kel-1782716719794', 'usr-1782272122169', '572156546546321', 'Anoi', '2000-01-01', 'Laki-laki');
+('kel-1782283320710', 'usr-004', '215468746513215', 'Elsa Santoso', '1990-01-01', 'Perempuan');
 
 -- --------------------------------------------------------
 
@@ -72,7 +71,7 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`id`, `applicant_name`, `nik`, `email`, `phone`, `rusun_id`, `rusun_name`, `tower_id`, `unit_id`, `unit_number`, `type`, `status`, `created_at`) VALUES
-('bkg-1782465206616', 'Budi Santoso', '5701548963254123', 'budi.santoso@gmail.com', '08245689032', 'rusun-2', 'Rusunami Klapa Village', 'tow-2-a', 'unit-1782356452252', 'S-001', 'Rusunami Umum', 'approved', '2026-06-26 02:13:26');
+('bkg-1782273988146', 'popi asmara', '580704552524524', 'popi@gmail.com', '08547521036', 'rusun-1782272620881', 'Rusunawa Tebet', 'tow-1782272719401', 'unit-1782272752233', 'A-001', 'Rusunawa Umum', 'pending_approval', '2026-06-23 21:06:28');
 
 -- --------------------------------------------------------
 
@@ -90,13 +89,6 @@ CREATE TABLE `btpp` (
   `handover_date` date DEFAULT NULL,
   `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `btpp`
---
-
-INSERT INTO `btpp` (`id`, `tenant_name`, `unit_id`, `unit_number`, `status`, `submission_date`, `handover_date`, `notes`) VALUES
-('btp-1782465355616', 'Budi Santoso', 'unit-1782356452252', 'S-001', 'approved', '2026-06-26', '2026-07-10', 'BTPP disetujui & ditandatangani Kepala Dinas.');
 
 -- --------------------------------------------------------
 
@@ -138,8 +130,7 @@ CREATE TABLE `contracts` (
 
 INSERT INTO `contracts` (`id`, `vendor_name`, `work_type`, `start_date`, `end_date`, `budget`, `status`) VALUES
 ('ctr-001', 'PT. Bangun Graha Mandiri', 'Perawatan Lift & Elektrikal', '2026-01-01', '2026-12-31', 120000000.00, 'active'),
-('ctr-002', 'CV. Tirta Kencana', 'Pembersihan & Distribusi Air Bersih', '2026-03-01', '2026-09-30', 45000000.00, 'active'),
-('ctr-1783562393876', 'PT. Internet Jaya Selalu', 'Jaringan Internet', '2026-01-01', '2026-12-31', 200000000.00, 'active');
+('ctr-002', 'CV. Tirta Kencana', 'Pembersihan & Distribusi Air Bersih', '2026-03-01', '2026-09-30', 45000000.00, 'active');
 
 -- --------------------------------------------------------
 
@@ -267,7 +258,6 @@ CREATE TABLE `provinsi` (
 --
 
 INSERT INTO `provinsi` (`id`, `name`) VALUES
-('pro-1783561483412', 'Banten'),
 ('prov-31', 'DKI Jakarta');
 
 -- --------------------------------------------------------
@@ -310,8 +300,7 @@ CREATE TABLE `surveys` (
 --
 
 INSERT INTO `surveys` (`id`, `title`, `description`, `active`) VALUES
-('srv-001', 'Survei Kepuasan Layanan Rusun Q2 2026', 'Kuesioner evaluasi kebersihan, keamanan, dan respon perawatan.', 1),
-('srv-1782466071736', 'Survei Layanan K3 Rusun 2026', 'Kuesioner keamanan, keselamatan dan mitigasi bencana gedung', 1);
+('srv-001', 'Survei Kepuasan Layanan Rusun Q2 2026', 'Kuesioner evaluasi kebersihan, keamanan, dan respon perawatan.', 1);
 
 -- --------------------------------------------------------
 
@@ -389,13 +378,6 @@ CREATE TABLE `tagihan` (
   `proof` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data untuk tabel `tagihan`
---
-
-INSERT INTO `tagihan` (`id`, `unit_id`, `unit_number`, `tenant_name`, `type`, `amount`, `month`, `status`, `due_date`, `payment_date`, `proof`) VALUES
-('tag-1782465294672', 'unit-1782356452252', 'S-001', 'Budi Santoso', 'Rent', 450000.00, 'Juni 2026', 'paid', '2026-07-10', '2026-07-09', 'receipt_upload.jpg');
-
 -- --------------------------------------------------------
 
 --
@@ -420,8 +402,6 @@ INSERT INTO `towers` (`id`, `rusun_id`, `name`, `floor_count`) VALUES
 ('tow-1782351540513', 'rusun-1782272620881', 'Tower B', 1),
 ('tow-1782362398023', 'rusun-1782272620881', 'Tower A', 2),
 ('tow-1782370390019', 'rusun-1', 'Block A', 2),
-('tow-1782464779744', 'rusun-2', 'Tower Sakinah', 1),
-('tow-1782705223530', 'rusun-1', 'Block B', 2),
 ('tow-2-a', 'rusun-2', 'Tower Samawa', 1);
 
 -- --------------------------------------------------------
@@ -446,12 +426,13 @@ CREATE TABLE `units` (
 --
 
 INSERT INTO `units` (`id`, `tower_id`, `number`, `floor`, `price`, `status`, `tenant_name`, `id;tower_id;number;floor;price;status;tenant_name`) VALUES
+('unit-1782272752233', 'tow-1782272719401', 'A-001', '1', 850000.00, 'booked', 'popi asmara', NULL),
 ('unit-1782349725457', 'tow-1782272719401', 'A-002', '1', 850000.00, 'available', '', NULL),
 ('unit-1782349778825', 'tow-1782272719401', 'A-003', '1', 850000.00, 'available', '', NULL),
 ('unit-1782351594833', 'tow-1782351540513', 'B-101', '1', 850000.00, 'available', '', NULL),
 ('unit-1782356411764', 'tow-1-a', 'A-001', '1', 450000.00, 'available', '', NULL),
 ('unit-1782356432259', 'tow-1-b', 'B-001', '1', 450000.00, 'available', '', NULL),
-('unit-1782356452252', 'tow-2-a', 'S-001', '1', 550000.00, 'occupied', 'Budi Santoso', NULL),
+('unit-1782356452252', 'tow-2-a', 'S-001', '1', 550000.00, 'available', '', NULL),
 ('unit-1782356482476', 'tow-2-a', 's-001', '2', 550000.00, 'available', '', NULL),
 ('unit-1782356526668', 'tow-1-a', 'A-002', '1', 600000.00, 'available', '', NULL),
 ('unit-1782356539957', 'tow-1-b', 'b-002', '1', 400000.00, 'available', '', NULL),
@@ -473,16 +454,7 @@ INSERT INTO `units` (`id`, `tower_id`, `number`, `floor`, `price`, `status`, `te
 ('unit-1782371626747', 'tow-1782272719401', 'A-117', '1', 500000.00, 'available', '', NULL),
 ('unit-1782371632218', 'tow-1782272719401', 'A-118', '1', 750000.00, 'available', '', NULL),
 ('unit-1782371637283', 'tow-1782272719401', 'A-119', '1', 500000.00, 'available', '', NULL),
-('unit-1782371646611', 'tow-1782272719401', 'A-120', '1', 400000.00, 'available', '', NULL),
-('unit-1782464818071', 'tow-1782464779744', 'S-101', '1', 350000.00, 'available', '', NULL),
-('unit-1782464827967', 'tow-1782464779744', 'S-102', '1', 500000.00, 'available', '', NULL),
-('unit-1782464835847', 'tow-1782464779744', 'S-103', '1', 400000.00, 'available', '', NULL),
-('unit-1782464872039', 'tow-2-a', 'S-102', '1', 700000.00, 'available', '', NULL),
-('unit-1782464900911', 'tow-2-a', 'S-103', '1', 250000.00, 'available', '', NULL),
-('unit-1782464911463', 'tow-2-a', 'S-104', '1', 700000.00, 'available', '', NULL),
-('unit-1782464920231', 'tow-2-a', 'S-105', '1', 450000.00, 'available', '', NULL),
-('unit-1782464927271', 'tow-2-a', 'S-106', '1', 700000.00, 'available', '', NULL),
-('unit-1782705265809', 'tow-1782705223530', 'B-201', '2', 300000.00, 'available', '', NULL);
+('unit-1782371646611', 'tow-1782272719401', 'A-120', '1', 400000.00, 'available', '', NULL);
 
 -- --------------------------------------------------------
 
@@ -510,10 +482,9 @@ INSERT INTO `users` (`id`, `username`, `password`, `name`, `role`, `email`, `pho
 ('usr-001', 'admin', 'admin123', 'Administrator', 'administrator', 'admin@sirukim.go.id', NULL, NULL, 1),
 ('usr-002', 'dinas_entry', 'dinas123', 'Rian Hidayat', 'entry_data', 'rian.entry@sirukim.go.id', NULL, NULL, 1),
 ('usr-003', 'uprs_perawatan', 'uprs123', 'UPRS Wilayah I', 'uprs_perawatan', 'uprs.w1@sirukim.go.id', NULL, NULL, 1),
-('usr-004', 'penghuni_budi', 'budi123', 'Budi Santoso', 'penghuni', 'budi.santoso@gmail.com', '081234567890', 'unit-1782356452252', 1),
+('usr-004', 'penghuni_budi', 'budi123', 'Budi Santoso', 'penghuni', 'budi.santoso@gmail.com', '081234567890', 'unit-101', 1),
 ('usr-005', 'pimpinan_dinas', 'pimpinan123', 'Ir. Jaka Widaya', 'pimpinan_dinas', 'jakawidaya@sirukim.go.id', NULL, NULL, 1),
-('usr-1782272122169', 'popi', '123', 'popi asmara', 'penghuni', 'popi@gmail.com', NULL, NULL, 1),
-('usr-1782465551351', 'jeni', '12345678', 'Jeni dini rahmawati', 'penghuni', 'jeni@gmail.com', '08752410235', NULL, 1);
+('usr-1782272122169', 'popi', '123', 'popi asmara', 'penghuni', 'popi@gmail.com', NULL, NULL, 1);
 
 --
 -- Indexes for dumped tables
