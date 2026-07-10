@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDb } from '../context/DbContext';
 import { 
   X, LogOut, ChevronRight
@@ -13,6 +13,7 @@ export default function Sidebar({
   onLogout
 }) {
   const { currentUser } = useDb();
+  const [masterTransaksiOpen, setMasterTransaksiOpen] = useState(activeMenu.startsWith('master_transaksi_'));
 
   // Color config based on current user role
   const roleColors = {
@@ -60,7 +61,12 @@ export default function Sidebar({
       { id: 'facilities', label: 'Master Data Fasilitas' },
       { id: 'regions', label: 'Master Data Wilayah' },
       { id: 'maintenance_depts', label: 'Master Bidang Perawatan' },
-      { id: 'questionnaire_setup', label: 'Setup Kuisioner' }
+      { id: 'questionnaire_setup', label: 'Setup Kuisioner' },
+      { id: 'master_transaksi_pendaftaran', label: 'Master Transaksi: Pendaftaran' },
+      { id: 'master_transaksi_pemeriksaan', label: 'Master Transaksi: Pemeriksaan Berkas' },
+      { id: 'master_transaksi_persetujuan', label: 'Master Transaksi: Persetujuan' },
+      { id: 'master_transaksi_daftar_ulang', label: 'Master Transaksi: Pendaftaran Ulang' },
+      { id: 'master_transaksi_serah_terima', label: 'Master Transaksi: Serah Terima Kunci' }
     ],
     entry_data: [
       { id: 'dashboard', label: 'Dashboard Overview' },
@@ -74,7 +80,12 @@ export default function Sidebar({
       { id: 'registrations', label: 'Pendaftaran Rusunawa' },
       { id: 'btpp_handover', label: 'Penyerahan BTPP' },
       { id: 'billing_invoices', label: 'Tagihan & Pembayaran' },
-      { id: 'survey_results', label: 'Hasil Kuesioner' }
+      { id: 'survey_results', label: 'Hasil Kuesioner' },
+      { id: 'master_transaksi_pendaftaran', label: 'Master Transaksi: Pendaftaran' },
+      { id: 'master_transaksi_pemeriksaan', label: 'Master Transaksi: Pemeriksaan Berkas' },
+      { id: 'master_transaksi_persetujuan', label: 'Master Transaksi: Persetujuan' },
+      { id: 'master_transaksi_daftar_ulang', label: 'Master Transaksi: Pendaftaran Ulang' },
+      { id: 'master_transaksi_serah_terima', label: 'Master Transaksi: Serah Terima Kunci' }
     ],
     uprs_perawatan: [
       { id: 'dashboard', label: 'Dashboard UPRS' },
@@ -89,7 +100,11 @@ export default function Sidebar({
     penghuni: [
       { id: 'dashboard', label: 'Unit Saya' },
       { id: 'profile', label: 'Edit Profil' },
-      { id: 'apply_booking', label: 'Daftar Rusun Baru' },
+      { id: 'master_transaksi_pendaftaran', label: 'Master Transaksi: Pendaftaran Sewa Rusun' },
+      { id: 'master_transaksi_pemeriksaan', label: 'Master Transaksi: Pemeriksaan Berkas' },
+      { id: 'master_transaksi_persetujuan', label: 'Master Transaksi: Persetujuan' },
+      { id: 'master_transaksi_daftar_ulang', label: 'Master Transaksi: Pendaftaran Ulang' },
+      { id: 'master_transaksi_serah_terima', label: 'Master Transaksi: Serah Terima Kunci' },
       { id: 'my_bills', label: 'Tagihan & Pembayaran' },
       { id: 'btpp_request', label: 'Pengajuan BTPP' },
       { id: 'submit_complaint', label: 'Aduan & Keluhan' },
@@ -100,11 +115,40 @@ export default function Sidebar({
       { id: 'profile', label: 'Edit Profil' },
       { id: 'financial_revenue', label: 'Target vs Realisasi' },
       { id: 'approvals_inbox', label: 'Kotak Persetujuan' },
-      { id: 'analytical_reports', label: 'Laporan Cetak' }
+      { id: 'analytical_reports', label: 'Laporan Cetak' },
+      { id: 'master_transaksi_pendaftaran', label: 'Master Transaksi: Pendaftaran' },
+      { id: 'master_transaksi_pemeriksaan', label: 'Master Transaksi: Pemeriksaan Berkas' },
+      { id: 'master_transaksi_persetujuan', label: 'Master Transaksi: Persetujuan' },
+      { id: 'master_transaksi_daftar_ulang', label: 'Master Transaksi: Pendaftaran Ulang' },
+      { id: 'master_transaksi_serah_terima', label: 'Master Transaksi: Serah Terima Kunci' }
     ]
   };
 
   const items = menuConfig[currentUser?.role] || [];
+
+  const masterTransaksiItems = useMemo(
+    () => items.filter((item) => item.id.startsWith('master_transaksi_')),
+    [items]
+  );
+
+  const masterTransaksiShortLabel = {
+    master_transaksi_pendaftaran: 'Pendaftaran',
+    master_transaksi_pemeriksaan: 'Pemeriksaan',
+    master_transaksi_persetujuan: 'Persetujuan',
+    master_transaksi_daftar_ulang: 'Daftar Ulang',
+    master_transaksi_serah_terima: 'Serah Terima Kunci'
+  };
+
+  const regularItems = useMemo(
+    () => items.filter((item) => !item.id.startsWith('master_transaksi_')),
+    [items]
+  );
+
+  useEffect(() => {
+    if (activeMenu.startsWith('master_transaksi_')) {
+      setMasterTransaksiOpen(true);
+    }
+  }, [activeMenu]);
 
   return (
     <>
@@ -162,7 +206,7 @@ export default function Sidebar({
 
         {/* Navigation Items */}
         <nav className="flex-grow px-3 py-3 overflow-y-auto space-y-1">
-          {items.map((item) => (
+          {regularItems.map((item) => (
             <button
               key={item.id}
               onClick={() => {
@@ -179,6 +223,44 @@ export default function Sidebar({
               {activeMenu === item.id && <ChevronRight className="w-4 h-4" />}
             </button>
           ))}
+
+          {masterTransaksiItems.length > 0 && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setMasterTransaksiOpen((prev) => !prev)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-xs font-semibold tracking-wide transition-all ${
+                  activeMenu.startsWith('master_transaksi_')
+                    ? `${currentTheme.activeBg} ${currentTheme.activeText} border-transparent shadow-md`
+                    : 'bg-transparent border-transparent text-slate-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span>Master Transaksi</span>
+                <ChevronRight className={`w-4 h-4 transition-transform ${masterTransaksiOpen ? 'rotate-90' : ''}`} />
+              </button>
+
+              {masterTransaksiOpen && (
+                <div className="space-y-1 pl-2 border-l border-white/10 ml-2">
+                  {masterTransaksiItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveMenu(item.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-lg border text-[11px] font-semibold tracking-wide transition-all ${
+                        activeMenu === item.id
+                          ? `${currentTheme.activeBg} ${currentTheme.activeText} border-transparent`
+                          : 'bg-transparent border-transparent text-slate-200 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{masterTransaksiShortLabel[item.id] || item.label.replace('Master Transaksi: ', '')}</span>
+                      {activeMenu === item.id && <ChevronRight className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Sidebar Footer */}

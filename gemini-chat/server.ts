@@ -13,7 +13,7 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 
 async function startServer() {
   const app = express();
-  const PORT = 5173;
+  const PORT = 5174;
 
   // Body parser
   app.use(express.json());

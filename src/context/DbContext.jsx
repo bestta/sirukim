@@ -260,6 +260,44 @@ const INITIAL_ANGGOTA_KELUARGA = [
   }
 ];
 
+const INITIAL_SEWA_TRANSACTIONS = [
+  {
+    id: 'sewa-001',
+    applicantUserId: 'usr-004',
+    applicantName: 'Budi Santoso',
+    applicantEmail: 'budi.santoso@gmail.com',
+    nik: '3174090101900001',
+    phone: '081234567890',
+    rusunName: 'Rusunawa Marunda',
+    towerName: 'Block A',
+    unitNumber: 'A-102',
+    documents: {
+      ktp: 'ktp_budi.pdf',
+      kk: 'kk_budi.pdf',
+      slipGaji: 'slip_gaji_budi.pdf',
+      npwp: 'npwp_budi.pdf',
+      suratBelumPunyaRumah: 'surat_belum_punya_rumah_budi.pdf',
+      skBekerja: 'sk_bekerja_budi.pdf'
+    },
+    documentsUploadedAt: '2026-07-08T09:30:00.000Z',
+    verificationScheduleAt: '2026-07-12 09:00',
+    verificationScheduleNote: 'Bawa dokumen asli.',
+    verificationInviteSentAt: '2026-07-08T10:00:00.000Z',
+    verificationStatus: 'valid',
+    verificationNote: 'Seluruh berkas valid.',
+    approvalStatus: 'pending',
+    approvalNote: '',
+    reRegistrationStatus: 'pending',
+    reRegistrationNote: '',
+    handoverStatus: 'pending',
+    handoverDate: '',
+    handoverProofFile: '',
+    handoverNote: '',
+    createdAt: '2026-07-08T09:30:00.000Z',
+    updatedAt: '2026-07-08T10:00:00.000Z'
+  }
+];
+
 export const DbProvider = ({ children }) => {
   // Load state from local storage or fallback to initials
   const [users, setUsers] = useState(() => migrateUsers(JSON.parse(localStorage.getItem('sirukim_users'))));
@@ -274,6 +312,7 @@ export const DbProvider = ({ children }) => {
   const [surveyResponses, setSurveyResponses] = useState(() => JSON.parse(localStorage.getItem('sirukim_survey_responses')) || INITIAL_SURVEY_RESPONSES);
   const [metadata, setMetadata] = useState(() => JSON.parse(localStorage.getItem('sirukim_metadata')) || INITIAL_METADATA);
   const [anggotaKeluarga, setAnggotaKeluarga] = useState(() => JSON.parse(localStorage.getItem('sirukim_anggota_keluarga')) || INITIAL_ANGGOTA_KELUARGA);
+  const [sewaTransactions, setSewaTransactions] = useState(() => JSON.parse(localStorage.getItem('sirukim_sewa_transactions')) || INITIAL_SEWA_TRANSACTIONS);
   const [activityLogs, setActivityLogs] = useState(() => JSON.parse(localStorage.getItem('sirukim_activity_logs')) || []);
 
   // Current active user simulation
@@ -373,6 +412,7 @@ export const DbProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('sirukim_survey_responses', JSON.stringify(surveyResponses)); }, [surveyResponses]);
   useEffect(() => { localStorage.setItem('sirukim_metadata', JSON.stringify(metadata)); }, [metadata]);
   useEffect(() => { localStorage.setItem('sirukim_anggota_keluarga', JSON.stringify(anggotaKeluarga)); }, [anggotaKeluarga]);
+  useEffect(() => { localStorage.setItem('sirukim_sewa_transactions', JSON.stringify(sewaTransactions)); }, [sewaTransactions]);
   useEffect(() => { localStorage.setItem('sirukim_activity_logs', JSON.stringify(activityLogs)); }, [activityLogs]);
 
   useEffect(() => {
@@ -396,6 +436,7 @@ export const DbProvider = ({ children }) => {
         if (Array.isArray(dbData.surveyResponses)) setSurveyResponses(dbData.surveyResponses);
         if (dbData.metadata) setMetadata(dbData.metadata);
         if (Array.isArray(dbData.anggotaKeluarga)) setAnggotaKeluarga(dbData.anggotaKeluarga);
+        if (Array.isArray(dbData.sewaTransactions)) setSewaTransactions(dbData.sewaTransactions);
 
         setCurrentUser((prev) => {
           if (!prev?.id) return null;
@@ -998,6 +1039,333 @@ export const DbProvider = ({ children }) => {
     }));
   };
 
+  const addSewaTransaction = (payload) => {
+    const now = new Date().toISOString();
+    const actorType = currentUser?.role === 'administrator'
+      ? 'admin'
+      : currentUser?.role === 'entry_data'
+        ? 'entry'
+        : currentUser?.role === 'pimpinan_dinas'
+          ? 'leader'
+          : 'resident';
+
+    const record = {
+      id: `sewa-${Date.now()}`,
+      applicantUserId: payload.applicantUserId || currentUser?.id || null,
+      applicantName: payload.applicantName || currentUser?.name || '-',
+      applicantEmail: payload.applicantEmail || currentUser?.email || '-',
+      nik: payload.nik || '',
+      phone: payload.phone || '',
+      rusunId: payload.rusunId || '',
+      rusunName: payload.rusunName || '',
+      towerId: payload.towerId || '',
+      towerName: payload.towerName || '',
+      unitId: payload.unitId || '',
+      unitNumber: payload.unitNumber || '',
+      documents: payload.documents || {},
+      documentChecks: payload.documentChecks || {},
+      documentsUploadedAt: now,
+      verificationScheduleAt: '',
+      verificationScheduleNote: '',
+      verificationInviteSentAt: '',
+      verificationStatus: 'pending',
+      verificationNote: '',
+      approvalStatus: 'pending',
+      approvalNote: '',
+      requiredRevisionStage: 0,
+      revisionUploads: [],
+      reRegistrationStatus: 'pending',
+      reRegistrationNote: '',
+      reRegistrationChecks: {
+        dokumenLengkap: false,
+        dataPenghuniValid: false,
+        pembayaranValid: false
+      },
+      handoverStatus: 'pending',
+      handoverDate: '',
+      handoverProofFile: '',
+      handoverNote: '',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    setSewaTransactions((prev) => [record, ...prev]);
+    safePersist(persistCreate('sewa_transactions', record));
+    pushActivityLog('Pendaftaran Sewa Rusun Baru', `${record.applicantName} mengirim berkas pendaftaran sewa rusun.`, actorType);
+  };
+
+  const updateSewaTransaction = (transactionId, fields) => {
+    const now = new Date().toISOString();
+    const existing = sewaTransactions.find((item) => item.id === transactionId);
+    const actorType = currentUser?.role === 'administrator'
+      ? 'admin'
+      : currentUser?.role === 'entry_data'
+        ? 'entry'
+        : currentUser?.role === 'pimpinan_dinas'
+          ? 'leader'
+          : 'resident';
+
+    setSewaTransactions((prev) => prev.map((item) => item.id === transactionId ? { ...item, ...fields, updatedAt: now } : item));
+    safePersist(persistUpdate('sewa_transactions', transactionId, { ...fields, updated_at: now }));
+    if (existing) {
+      pushActivityLog('Edit Transaksi Sewa Rusun', `Data pendaftaran ${existing.applicantName} diperbarui.`, actorType);
+    }
+  };
+
+  const restoreUnitAndBooking = (transaction) => {
+    if (!transaction?.unitId) return;
+
+    changeUnitStatus(transaction.unitId, 'available', '');
+    setBookings((prev) => prev.map((booking) => {
+      const isRelated = (
+        booking.unitId === transaction.unitId &&
+        (booking.applicantName === transaction.applicantName || booking.email === transaction.applicantEmail)
+      );
+
+      if (!isRelated) return booking;
+      safePersist(persistUpdate('bookings', booking.id, { status: 'rejected' }));
+      return { ...booking, status: 'rejected' };
+    }));
+  };
+
+  const deleteSewaTransaction = (transactionId, options = {}) => {
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    if (!target) return;
+
+    if (options.restoreUnit !== false) {
+      restoreUnitAndBooking(target);
+    }
+
+    setSewaTransactions((prev) => prev.filter((item) => item.id !== transactionId));
+    safePersist(persistDelete('sewa_transactions', transactionId));
+
+    const actorType = currentUser?.role === 'administrator'
+      ? 'admin'
+      : currentUser?.role === 'entry_data'
+        ? 'entry'
+        : currentUser?.role === 'pimpinan_dinas'
+          ? 'leader'
+          : 'resident';
+    pushActivityLog('Hapus Transaksi Sewa Rusun', `Data pendaftaran ${target.applicantName} dihapus dan unit dikembalikan tersedia.`, actorType);
+  };
+
+  const scheduleSewaVerification = (transactionId, payload) => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+
+      return {
+        ...item,
+        verificationScheduleAt: payload.verificationScheduleAt,
+        verificationScheduleNote: payload.verificationScheduleNote,
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      verification_schedule_at: payload.verificationScheduleAt,
+      verification_schedule_note: payload.verificationScheduleNote,
+      updated_at: now
+    }));
+
+    if (target) {
+      const actorType = currentUser?.role === 'administrator' ? 'admin' : (currentUser?.role === 'pimpinan_dinas' ? 'leader' : 'entry');
+      pushActivityLog('Jadwal Verifikasi Berkas Dibuat', `${target.applicantName} dijadwalkan verifikasi pada ${payload.verificationScheduleAt}.`, actorType);
+    }
+  };
+
+  const markSewaVerificationInviteSent = (transactionId) => {
+    const now = new Date().toISOString();
+    setSewaTransactions((prev) => prev.map((item) => item.id === transactionId ? { ...item, verificationInviteSentAt: now, updatedAt: now } : item));
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      verification_invite_sent_at: now,
+      updated_at: now
+    }));
+  };
+
+  const assessSewaTransaction = (transactionId, status, note = '') => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+      return {
+        ...item,
+        verificationStatus: status,
+        verificationNote: note,
+        requiredRevisionStage: status === 'revisi' ? 2 : 0,
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      verification_status: status,
+      verification_note: note,
+      required_revision_stage: status === 'revisi' ? 2 : 0,
+      updated_at: now
+    }));
+
+    if (status === 'tidak_valid' && target) {
+      restoreUnitAndBooking(target);
+    }
+
+    if (target) {
+      const actorType = currentUser?.role === 'administrator' ? 'admin' : (currentUser?.role === 'pimpinan_dinas' ? 'leader' : 'entry');
+      pushActivityLog('Pemeriksaan Berkas Diproses', `${target.applicantName} diberi status ${status}.`, actorType);
+    }
+  };
+
+  const decideSewaTransaction = (transactionId, status, note = '') => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+      return {
+        ...item,
+        approvalStatus: status,
+        approvalNote: note,
+        requiredRevisionStage: status === 'revisi_berkas' ? 3 : item.requiredRevisionStage,
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      approval_status: status,
+      approval_note: note,
+      required_revision_stage: status === 'revisi_berkas' ? 3 : null,
+      updated_at: now
+    }));
+
+    if (status === 'ditolak' && target) {
+      restoreUnitAndBooking(target);
+    }
+
+    if (target) {
+      const actorType = currentUser?.role === 'administrator' ? 'admin' : (currentUser?.role === 'pimpinan_dinas' ? 'leader' : 'entry');
+      pushActivityLog('Persetujuan Pendaftaran Diproses', `${target.applicantName} diberi keputusan ${status}.`, actorType);
+    }
+  };
+
+  const uploadSewaRevisionDocs = (transactionId, stage, docs) => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    if (!target) return;
+
+    const nextUploads = [
+      ...(target.revisionUploads || []),
+      {
+        id: `rev-${Date.now()}`,
+        stage,
+        docs,
+        uploadedBy: currentUser?.name || '-',
+        uploadedAt: now
+      }
+    ];
+
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+      return {
+        ...item,
+        documents: { ...item.documents, ...docs },
+        revisionUploads: nextUploads,
+        verificationStatus: stage === 2 ? 'pending' : item.verificationStatus,
+        approvalStatus: stage === 3 ? 'pending' : item.approvalStatus,
+        requiredRevisionStage: 0,
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      documents: { ...target.documents, ...docs },
+      revision_uploads: nextUploads,
+      verification_status: stage === 2 ? 'pending' : target.verificationStatus,
+      approval_status: stage === 3 ? 'pending' : target.approvalStatus,
+      required_revision_stage: 0,
+      updated_at: now
+    }));
+
+    pushActivityLog('Upload Berkas Revisi', `${target.applicantName} mengunggah revisi berkas tahap ${stage}.`, 'resident');
+  };
+
+  const processSewaDaftarUlang = (transactionId, status, note = '') => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    const resolvedApprovalStatus = status === 'komplit_valid' ? 'disetujui' : target?.approvalStatus;
+    const resolvedVerificationStatus = status === 'komplit_valid' ? 'valid' : target?.verificationStatus;
+
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+      return {
+        ...item,
+        verificationStatus: resolvedVerificationStatus || item.verificationStatus,
+        approvalStatus: resolvedApprovalStatus || item.approvalStatus,
+        reRegistrationStatus: status,
+        reRegistrationNote: note,
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      verification_status: resolvedVerificationStatus,
+      approval_status: resolvedApprovalStatus,
+      re_registration_status: status,
+      re_registration_note: note,
+      updated_at: now
+    }));
+
+    if (target) {
+      const actorType = currentUser?.role === 'administrator' ? 'admin' : (currentUser?.role === 'pimpinan_dinas' ? 'leader' : 'entry');
+      pushActivityLog('Proses Pendaftaran Ulang', `${target.applicantName} diproses daftar ulang dengan status ${status}.`, actorType);
+    }
+  };
+
+  const updateSewaDaftarUlangChecks = (transactionId, checks) => {
+    const now = new Date().toISOString();
+    setSewaTransactions((prev) => prev.map((item) => item.id === transactionId
+      ? { ...item, reRegistrationChecks: { ...(item.reRegistrationChecks || {}), ...checks }, updatedAt: now }
+      : item));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      re_registration_checks: checks,
+      updated_at: now
+    }));
+  };
+
+  const processSewaSerahTerima = (transactionId, payload) => {
+    const now = new Date().toISOString();
+    const target = sewaTransactions.find((item) => item.id === transactionId);
+    setSewaTransactions((prev) => prev.map((item) => {
+      if (item.id !== transactionId) return item;
+      return {
+        ...item,
+        verificationStatus: 'valid',
+        approvalStatus: 'disetujui',
+        reRegistrationStatus: 'komplit_valid',
+        handoverStatus: 'diterima',
+        handoverDate: payload.handoverDate,
+        handoverProofFile: payload.handoverProofFile,
+        handoverNote: payload.handoverNote || '',
+        updatedAt: now
+      };
+    }));
+
+    safePersist(persistUpdate('sewa_transactions', transactionId, {
+      verification_status: 'valid',
+      approval_status: 'disetujui',
+      re_registration_status: 'komplit_valid',
+      handover_status: 'diterima',
+      handover_date: payload.handoverDate,
+      handover_proof_file: payload.handoverProofFile,
+      handover_note: payload.handoverNote || '',
+      updated_at: now
+    }));
+
+    if (target) {
+      const actorType = currentUser?.role === 'administrator' ? 'admin' : (currentUser?.role === 'pimpinan_dinas' ? 'leader' : 'entry');
+      pushActivityLog('Serah Terima Kunci', `Serah terima kunci untuk ${target.applicantName} telah diproses.`, actorType);
+    }
+  };
+
   // --- EXECUTIVE / PIMPINAN DINAS OPERATIONS ---
   const approveBooking = (bookingId, approve = true) => {
     const booking = bookings.find(b => b.id === bookingId);
@@ -1172,6 +1540,7 @@ export const DbProvider = ({ children }) => {
       surveyResponses,
       metadata,
       anggotaKeluarga,
+      sewaTransactions,
       activityLogs,
       currentUser,
       changeRole,
@@ -1210,6 +1579,19 @@ export const DbProvider = ({ children }) => {
       submitSurveyResponse,
       submitBtppRequest,
       addAnggotaKeluarga,
+
+      // Master transaksi sewa rusun
+      addSewaTransaction,
+      updateSewaTransaction,
+      deleteSewaTransaction,
+      scheduleSewaVerification,
+      markSewaVerificationInviteSent,
+      assessSewaTransaction,
+      decideSewaTransaction,
+      uploadSewaRevisionDocs,
+      processSewaDaftarUlang,
+      updateSewaDaftarUlangChecks,
+      processSewaSerahTerima,
 
       // Pimpinan methods
       approveBooking,

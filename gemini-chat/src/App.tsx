@@ -460,7 +460,7 @@ export default function App() {
             <span className="font-semibold text-gray-700">Server Terhubung</span>
           </div>
           <p className="mt-1 text-gray-400 leading-normal">
-            API Key dikelola secara aman di sisi server.
+            Sistem Informasi Perumahan dan Permukiman Provinsi DKI Jakarta.
           </p>
         </div>
       </div>

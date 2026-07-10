@@ -10,7 +10,7 @@ export default function GeminiChatWidget() {
     if (byEnv && String(byEnv).trim().length > 0) {
       return String(byEnv).trim();
     }
-    return 'http://localhost:5173';
+    return 'http://localhost:5174';
   }, []);
 
   return (
@@ -23,7 +23,7 @@ export default function GeminiChatWidget() {
           aria-label="Buka Chatbot Gemini"
         >
           <MessageCircle className="h-4 w-4" />
-          <span className="text-sm font-semibold">Chatbot</span>
+          <span className="text-sm font-semibold">Tanya Bang Doel</span>
         </button>
       )}
 

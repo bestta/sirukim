@@ -5,6 +5,7 @@ import {
   AlertTriangle, DollarSign, Upload, UserPlus, Heart, Edit2, Trash2
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import MasterTransaksiRusun from '../components/MasterTransaksiRusun';
 
 const PAGE_SIZE = 5;
 
@@ -44,6 +45,10 @@ export default function AdminDinas({ activeMenu }) {
     const code = lastSegment.replace(/[^a-zA-Z0-9]/g, '').charAt(0).toUpperCase();
     return code || 'U';
   };
+
+  if (activeMenu.startsWith('master_transaksi_')) {
+    return <MasterTransaksiRusun activeMenu={activeMenu} />;
+  }
 
   const getNextUnitNumber = (tower, floor) => {
     if (!tower) return '';

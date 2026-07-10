@@ -1,14 +1,46 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDb } from '../context/DbContext';
 import { Bell, Sun, Moon, CheckCircle } from 'lucide-react';
 
 export default function Header({ 
   setSidebarOpen, 
+  setActiveMenu,
   activeMenuTitle 
 }) {
-  const { currentUser, bookings, complaints, tagihan } = useDb();
+  const { currentUser, bookings, complaints, tagihan, sewaTransactions } = useDb();
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [dismissedNotifIds, setDismissedNotifIds] = useState([]);
+
+  const dismissedNotifKey = useMemo(
+    () => currentUser?.id ? `sirukim_notif_dismissed_${currentUser.id}` : '',
+    [currentUser?.id]
+  );
+
+  useEffect(() => {
+    if (!dismissedNotifKey) {
+      setDismissedNotifIds([]);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(dismissedNotifKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setDismissedNotifIds(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setDismissedNotifIds([]);
+    }
+  }, [dismissedNotifKey]);
+
+  const persistDismissedNotif = (updater) => {
+    setDismissedNotifIds((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (dismissedNotifKey) {
+        localStorage.setItem(dismissedNotifKey, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   const toggleDarkMode = () => {
     setIsDark(!isDark);
@@ -41,29 +73,105 @@ export default function Header({
   // Compile notification logs
   const getNotifications = () => {
     const list = [];
-    // Add pending approvals for Pimpinan
-    if (currentUser?.role === 'pimpinan_dinas') {
-      const pCount = bookings.filter(b => b.status === 'pending_approval').length;
-      if (pCount > 0) list.push({ text: `${pCount} Permohonan Booking menunggu approval`, type: 'approval' });
-    }
+
     // Add pending work orders for UPRS
     if (currentUser?.role === 'uprs_perawatan') {
       const cCount = complaints.filter(c => c.status === 'submitted').length;
-      if (cCount > 0) list.push({ text: `${cCount} Pengaduan baru dari Penghuni`, type: 'complaint' });
+      if (cCount > 0) list.push({ id: `uprs-complaint-${cCount}`, text: `${cCount} Pengaduan baru dari Penghuni`, type: 'complaint', targetMenu: 'field_inspections' });
     }
+
+    if (currentUser?.role === 'administrator') {
+      const pendingAccountChecks = sewaTransactions.filter((item) => item.verificationStatus === 'pending').length;
+      if (pendingAccountChecks > 0) {
+        list.push({ id: `admin-pending-check-${pendingAccountChecks}`, text: `${pendingAccountChecks} pendaftaran sewa menunggu pemeriksaan berkas`, type: 'approval', targetMenu: 'master_transaksi_pemeriksaan' });
+      }
+    }
+
+    if (currentUser?.role === 'entry_data') {
+      const pendingChecks = sewaTransactions.filter((item) => item.verificationStatus === 'pending').length;
+      const pendingSchedules = sewaTransactions.filter((item) => !item.verificationScheduleAt).length;
+
+      if (pendingChecks > 0) {
+        list.push({ id: `entry-pending-check-${pendingChecks}`, text: `${pendingChecks} berkas pendaftaran menunggu proses pemeriksaan`, type: 'approval', targetMenu: 'master_transaksi_pemeriksaan' });
+      }
+
+      if (pendingSchedules > 0) {
+        list.push({ id: `entry-pending-schedule-${pendingSchedules}`, text: `${pendingSchedules} pendaftar belum dijadwalkan undangan verifikasi`, type: 'approval', targetMenu: 'master_transaksi_pendaftaran' });
+      }
+    }
+
     // Add unpaid rent for Penghuni
     if (currentUser?.role === 'penghuni') {
-      const uCount = tagihan.filter(t => t.status === 'unpaid').length;
-      if (uCount > 0) list.push({ text: `Anda memiliki ${uCount} tagihan sewa yang belum dibayar`, type: 'billing' });
+      const myBills = tagihan.filter((item) => item.tenantName === currentUser?.name);
+      const unpaidCount = myBills.filter((item) => item.status === 'unpaid' || item.status === 'overdue').length;
+      if (unpaidCount > 0) {
+        list.push({ id: `penghuni-bill-${unpaidCount}`, text: `Anda memiliki ${unpaidCount} tagihan sewa belum lunas`, type: 'billing', targetMenu: 'my_bills' });
+      }
+
+      const mySewa = sewaTransactions.filter((item) => (
+        item.applicantUserId === currentUser?.id ||
+        item.applicantEmail === currentUser?.email ||
+        item.applicantName === currentUser?.name
+      ));
+
+      const inviteCount = mySewa.filter((item) => item.verificationScheduleAt).length;
+      const pendingCount = mySewa.filter((item) => item.approvalStatus === 'pending').length;
+      const decidedCount = mySewa.filter((item) => item.approvalStatus !== 'pending').length;
+
+      if (inviteCount > 0) {
+        list.push({ id: `penghuni-invite-${inviteCount}`, text: `${inviteCount} undangan verifikasi berkas sewa rusun tersedia`, type: 'approval', targetMenu: 'master_transaksi_pendaftaran' });
+      }
+
+      if (pendingCount > 0) {
+        list.push({ id: `penghuni-pending-${pendingCount}`, text: `${pendingCount} pendaftaran sewa Anda sedang diproses`, type: 'approval', targetMenu: 'master_transaksi_persetujuan' });
+      }
+
+      if (decidedCount > 0) {
+        list.push({ id: `penghuni-decided-${decidedCount}`, text: `${decidedCount} status persetujuan pendaftaran telah diperbarui`, type: 'approval', targetMenu: 'master_transaksi_persetujuan' });
+      }
     }
+
+    if (currentUser?.role === 'pimpinan_dinas') {
+      const pendingApproval = sewaTransactions.filter((item) => item.verificationStatus !== 'pending' && item.approvalStatus === 'pending').length;
+      const pendingBookingApproval = bookings.filter((item) => item.status === 'pending_approval').length;
+
+      if (pendingApproval > 0) {
+        list.push({ id: `lead-pending-approval-${pendingApproval}`, text: `${pendingApproval} pendaftaran sewa menunggu persetujuan pimpinan`, type: 'approval', targetMenu: 'master_transaksi_persetujuan' });
+      }
+
+      if (pendingBookingApproval > 0) {
+        list.push({ id: `lead-booking-approval-${pendingBookingApproval}`, text: `${pendingBookingApproval} booking unit menunggu keputusan pimpinan`, type: 'approval', targetMenu: 'approvals_inbox' });
+      }
+    }
+
     // Default system welcome
     if (list.length === 0) {
-      list.push({ text: 'Sistem SIRUKIM berjalan normal. Tidak ada notifikasi tertunda.', type: 'info' });
+      list.push({ id: 'system-info-normal', text: 'Sistem SIRUKIM berjalan normal. Tidak ada notifikasi tertunda.', type: 'info' });
     }
     return list;
   };
 
-  const notifications = getNotifications();
+  const rawNotifications = getNotifications();
+  const notifications = currentUser?.role === 'penghuni'
+    ? rawNotifications.filter((item) => !dismissedNotifIds.includes(item.id))
+    : rawNotifications;
+
+  useEffect(() => {
+    if (currentUser?.role !== 'penghuni') return;
+
+    const activeIds = new Set(rawNotifications.map((item) => item.id));
+    persistDismissedNotif((prev) => prev.filter((id) => activeIds.has(id)));
+  }, [currentUser?.role, rawNotifications.length]);
+
+  const handleNotificationClick = (notification) => {
+    if (currentUser?.role === 'penghuni' && notification?.id) {
+      persistDismissedNotif((prev) => prev.includes(notification.id) ? prev : [...prev, notification.id]);
+    }
+
+    if (!notification?.targetMenu || typeof setActiveMenu !== 'function') return;
+    setActiveMenu(notification.targetMenu);
+    setNotifMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
@@ -111,7 +219,7 @@ export default function Header({
             className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-950/40 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition relative"
           >
             <Bell className="w-4 h-4" />
-            {notifications.length > 0 && notifications[0].type !== 'info' && (
+            {notifications.some((item) => item.type !== 'info') && (
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
             )}
           </button>
@@ -124,11 +232,18 @@ export default function Header({
                   Notifikasi Sistem
                 </h4>
                 <div className="space-y-3">
-                  {notifications.map((n, idx) => (
-                    <div key={idx} className="flex gap-2.5 items-start text-xs text-slate-600 dark:text-slate-300">
-                      <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <span>{n.text}</span>
-                    </div>
+                  {notifications.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => handleNotificationClick(n)}
+                      className={`w-full text-left rounded-lg p-1.5 transition ${n.targetMenu ? 'hover:bg-slate-100 dark:hover:bg-slate-800' : 'cursor-default'}`}
+                    >
+                      <div className="flex gap-2.5 items-start text-xs text-slate-600 dark:text-slate-300">
+                        <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <span>{n.text}</span>
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>

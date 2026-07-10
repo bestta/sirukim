@@ -161,7 +161,12 @@ function MainApp() {
       fill_survey: 'Kuesioner Kepuasan Layanan',
       financial_revenue: 'Target vs Realisasi Keuangan',
       approvals_inbox: 'Kotak Masuk Persetujuan',
-      analytical_reports: 'Ekspor Laporan PDF/Cetak'
+      analytical_reports: 'Ekspor Laporan PDF/Cetak',
+      master_transaksi_pendaftaran: 'Master Transaksi - Pendaftaran Sewa Rusun',
+      master_transaksi_pemeriksaan: 'Master Transaksi - Pemeriksaan Berkas',
+      master_transaksi_persetujuan: 'Master Transaksi - Persetujuan Pendaftaran',
+      master_transaksi_daftar_ulang: 'Master Transaksi - Pendaftaran Ulang Sewa Rusun',
+      master_transaksi_serah_terima: 'Master Transaksi - Serah Terima Kunci'
     };
     return titleMap[activeMenu] || 'Detail Menu';
   };
@@ -214,6 +219,7 @@ function MainApp() {
         {/* Dynamic header */}
         <Header 
           setSidebarOpen={setSidebarOpen} 
+          setActiveMenu={setActiveMenu}
           activeMenuTitle={getPageTitle()} 
         />
 

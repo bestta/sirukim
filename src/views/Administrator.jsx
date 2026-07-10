@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDb } from '../context/DbContext';
 import { Shield, Plus, Trash2, Edit2, Users, MapPin, ToggleLeft, ToggleRight, LayoutGrid, CheckCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import MasterTransaksiRusun from '../components/MasterTransaksiRusun';
 
 const PAGE_SIZE = 5;
 
@@ -41,6 +42,10 @@ export default function Administrator({ activeMenu }) {
     kecamatan: metadata.kota,
     kelurahan: metadata.kecamatan
   };
+
+  if (activeMenu.startsWith('master_transaksi_')) {
+    return <MasterTransaksiRusun activeMenu={activeMenu} />;
+  }
 
   const parentLabel = {
     kota: 'Provinsi',

@@ -5,6 +5,7 @@ import {
   Clock, AlertTriangle, ShieldCheck, Printer, BarChart2, Edit2
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import MasterTransaksiRusun from '../components/MasterTransaksiRusun';
 
 const PAGE_SIZE = 5;
 
@@ -24,6 +25,10 @@ export default function PimpinanDinas({ activeMenu }) {
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookingApprovalPage, setBookingApprovalPage] = useState(1);
   const [btppApprovalPage, setBtppApprovalPage] = useState(1);
+
+  if (activeMenu.startsWith('master_transaksi_')) {
+    return <MasterTransaksiRusun activeMenu={activeMenu} />;
+  }
 
   // Helpers
   const countOccupiedUnits = () => {

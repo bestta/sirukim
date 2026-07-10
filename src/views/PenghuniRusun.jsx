@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDb } from '../context/DbContext';
 import Pagination from '../components/Pagination';
+import MasterTransaksiRusun from '../components/MasterTransaksiRusun';
 import { 
   Home, FileText, Send, CheckCircle, AlertTriangle, 
   DollarSign, HelpCircle, ArrowUpRight, Upload, Info
@@ -14,7 +15,7 @@ export default function PenghuniRusun({ activeMenu, setActiveMenu }) {
     complaints, addComplaint,
     surveys, submitSurveyResponse,
     btpp, submitBtppRequest,
-    bookings, addBooking,
+    bookings, addBooking, sewaTransactions,
     anggotaKeluarga, addAnggotaKeluarga
   } = useDb();
 
@@ -26,6 +27,11 @@ export default function PenghuniRusun({ activeMenu, setActiveMenu }) {
   const [complaintForm, setComplaintForm] = useState({ category: 'Fasilitas Air', description: '' });
   const [surveyAnswers, setSurveyAnswers] = useState({});
   const [btppSubmitted, setBtppSubmitted] = useState(false);
+
+  if (activeMenu.startsWith('master_transaksi_') || activeMenu === 'apply_booking') {
+    const resolvedMenu = activeMenu === 'apply_booking' ? 'master_transaksi_pendaftaran' : activeMenu;
+    return <MasterTransaksiRusun activeMenu={resolvedMenu} />;
+  }
 
   const myKeluarga = anggotaKeluarga.filter((item) => item.userId === currentUser?.id);
 
@@ -47,6 +53,18 @@ export default function PenghuniRusun({ activeMenu, setActiveMenu }) {
       (b.applicantName === currentUser.name || b.email === currentUser.email)
     )
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const myBookingRequests = bookings.filter((b) => (
+    b.applicantName === currentUser.name || b.email === currentUser.email
+  ));
+
+  const mySewaRequests = sewaTransactions.filter((item) => (
+    item.applicantUserId === currentUser?.id ||
+    item.applicantEmail === currentUser?.email ||
+    item.applicantName === currentUser?.name
+  ));
+
+  const hasAnyRegistration = myBookingRequests.length > 0 || mySewaRequests.length > 0;
 
   const activeBooking = approvedMyBookings[0] || null;
   const assignedUnitId = currentUser.unitId || activeBooking?.unitId || null;
@@ -239,6 +257,10 @@ export default function PenghuniRusun({ activeMenu, setActiveMenu }) {
                 {assignedUnitId ? (
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold text-[9px]">
                     Aktif / Berlaku
+                  </span>
+                ) : !hasAnyRegistration ? (
+                  <span className="px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-500 border border-slate-500/20 font-bold text-[9px]">
+                    Belum Ada Sewa Kontrak
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold text-[9px]">
